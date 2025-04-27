@@ -100,7 +100,7 @@ watchEffect(() => fetchItems(false, searchQuery.value));
         <span>{{ item.text }}</span>
       </div>
 
-      <div v-if="loading" class="loading">Loading more items...</div>
+      <div v-if="loading" class="loading">Loading...</div>
     </div>
   </div>
 </template>
@@ -154,7 +154,6 @@ watchEffect(() => fetchItems(false, searchQuery.value));
   color: #666;
 }
 
-/* Drag & drop styles */
 .list-item.dragging {
   opacity: 0.5;
 }

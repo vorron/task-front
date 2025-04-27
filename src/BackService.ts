@@ -1,6 +1,6 @@
 import type Item from "./Item";
 
-const URL = "http://localhost:3000";
+const URL = import.meta.env.VITE_URL;
 
 export const getData = async (isNextPage: boolean, searchQuery: string) => {
   try {
