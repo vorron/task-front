@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watchEffect } from "vue";
+import { ref, computed, watch } from "vue";
 import type Item from "./Item";
 import { BackService } from "./BackService";
 
@@ -17,6 +17,7 @@ const draggedOverItemId = ref<number | null>(null);
 const displayedItems = computed(() => items.value);
 
 const fetchItems = async (isNextPage: boolean, searchQuery = "") => {
+  if (loading.value) return;
   loading.value = true;
   try {
     const data = await BackService.getData(isNextPage, searchQuery);
@@ -31,8 +32,7 @@ const fetchItems = async (isNextPage: boolean, searchQuery = "") => {
 const handleScroll = () => {
   if (!scrollContainer.value) return;
   const { scrollTop, clientHeight, scrollHeight } = scrollContainer.value;
-  if (scrollTop + clientHeight >= scrollHeight - 100)
-    fetchItems(true, searchQuery.value);
+  if (scrollTop + clientHeight >= scrollHeight - 100) fetchItems(true, searchQuery.value);
 };
 
 const onDragStart = (id: number) => {
@@ -51,12 +51,9 @@ const onDragOver = (id: number) => {
 };
 
 const onDrop = async (id: number) => {
-  if (!isDragging.value || !draggedItemId.value || draggedItemId.value === id)
-    return;
+  if (!isDragging.value || !draggedItemId.value || draggedItemId.value === id) return;
 
-  const draggedIndex = items.value.findIndex(
-    (item) => item.id === draggedItemId.value
-  );
+  const draggedIndex = items.value.findIndex((item) => item.id === draggedItemId.value);
   const dropIndex = items.value.findIndex((item) => item.id === id);
   if (draggedIndex === -1 || dropIndex === -1) return;
   BackService.setOrder(draggedItemId.value, id);
@@ -66,7 +63,13 @@ const onDrop = async (id: number) => {
   items.value = newItems;
 };
 
-watchEffect(() => fetchItems(false, searchQuery.value));
+watch(
+  searchQuery,
+  (newQuery) => {
+    fetchItems(false, newQuery);
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
@@ -74,11 +77,7 @@ watchEffect(() => fetchItems(false, searchQuery.value));
     <h1>Item List (1,000,000 items)</h1>
 
     <div class="search-container">
-      <input
-        v-model="searchQuery"
-        placeholder="Search items..."
-        class="search-input"
-      />
+      <input v-model="searchQuery" placeholder="Search items..." class="search-input" />
     </div>
 
     <div class="list-container" ref="scrollContainer" @scroll="handleScroll">
@@ -92,11 +91,7 @@ watchEffect(() => fetchItems(false, searchQuery.value));
         @drop="onDrop(item.id)"
         @dragend="onDragEnd"
       >
-        <input
-          type="checkbox"
-          v-model="item.selected"
-          @change="BackService.toggleSelection(item)"
-        />
+        <input type="checkbox" v-model="item.selected" @change="BackService.toggleSelection(item)" />
         <span>{{ item.text }}</span>
       </div>
 
